@@ -8,10 +8,12 @@ import {
     HUNDRED,
     TWO,
 } from '../shared/constants/dices.constant'
+import { fieldsChecker } from '../shared/helpers/fields-checker.helper'
+import { melee } from '../shared/helpers/melee.helper'
 import { range } from '../shared/helpers/range.helper'
 
 import { CheckChancesDto } from './interfaces/dtos/check-chances.dto'
-import { CheckChancesType, Melee } from './interfaces/types/check-chances.type'
+import { CheckChancesType } from './interfaces/types/check-chances.type'
 
 @Injectable()
 export class CheckerService {
@@ -21,13 +23,24 @@ export class CheckerService {
         checkChancesInput: CheckChancesDto,
     ): Promise<CheckChancesType> {
         const { attacker, defender } = checkChancesInput
-        const totalAverageDamage = []
-        const testArr = []
-        let totalSuccessHits = 0
-        let totalSuccessWounds = 0
-        let totalHits = 0
-        let totalWounds = 0
+        const totalAverageRangeDamage = []
+        const totalAverageMeleeDamage = []
+        const rangeRes = {
+            totalSuccessHits: 0,
+            totalSuccessWounds: 0,
+            totalHits: 0,
+            totalWounds: 0,
+        }
+        const meleeRes = {
+            totalSuccessHits: 0,
+            totalSuccessWounds: 0,
+            totalHits: 0,
+            totalWounds: 0,
+        }
 
+        await fieldsChecker(attacker)
+
+        const testArr = []
         for (let i = 1; i <= CHUNK_ONE_HUNDRED_THOUSAND; i += 1) {
             testArr.push(i)
         }
@@ -37,12 +50,19 @@ export class CheckerService {
             chunkTxs.map(async (test) => {
                 // eslint-disable-next-line no-unused-vars
                 for await (const t of test) {
-                    const rangeRes = await range(attacker, defender)
-                    totalHits += rangeRes.hits
-                    totalSuccessHits += rangeRes.successHits
-                    totalWounds += rangeRes.wounds
-                    totalSuccessWounds += rangeRes.successWounds
-                    totalAverageDamage.push(rangeRes.averageDamage)
+                    const rangeLocalRes = await range(attacker, defender)
+                    rangeRes.totalHits += rangeLocalRes.hits
+                    rangeRes.totalSuccessHits += rangeLocalRes.successHits
+                    rangeRes.totalWounds += rangeLocalRes.wounds
+                    rangeRes.totalSuccessWounds += rangeLocalRes.successWounds
+                    totalAverageRangeDamage.push(rangeLocalRes.averageDamage)
+
+                    const meleeLocalRes = await melee(attacker, defender)
+                    meleeRes.totalHits += meleeLocalRes.hits
+                    meleeRes.totalSuccessHits += meleeLocalRes.successHits
+                    meleeRes.totalWounds += meleeLocalRes.wounds
+                    meleeRes.totalSuccessWounds += meleeLocalRes.successWounds
+                    totalAverageMeleeDamage.push(meleeLocalRes.averageDamage)
                 }
             }),
         )
@@ -50,19 +70,33 @@ export class CheckerService {
 
         return {
             range: {
-                hits: `${((totalSuccessHits * HUNDRED) / totalHits).toFixed(
-                    0,
-                )}%`,
+                hits: `${(
+                    (rangeRes.totalSuccessHits * HUNDRED) /
+                    rangeRes.totalHits
+                ).toFixed(0)}%`,
                 wounds: `${(
-                    (totalSuccessWounds * HUNDRED) /
-                    totalWounds
+                    (rangeRes.totalSuccessWounds * HUNDRED) /
+                    rangeRes.totalWounds
                 ).toFixed(0)}%`,
                 averageDamage: (
-                    totalAverageDamage.reduce((a, b) => a + b) /
-                    totalAverageDamage.length
+                    totalAverageRangeDamage.reduce((a, b) => a + b) /
+                    totalAverageRangeDamage.length
                 ).toFixed(TWO),
             },
-            melee: {} as Melee,
+            melee: {
+                hits: `${(
+                    (meleeRes.totalSuccessHits * HUNDRED) /
+                    meleeRes.totalHits
+                ).toFixed(0)}%`,
+                wounds: `${(
+                    (meleeRes.totalSuccessWounds * HUNDRED) /
+                    meleeRes.totalWounds
+                ).toFixed(0)}%`,
+                averageDamage: (
+                    totalAverageMeleeDamage.reduce((a, b) => a + b) /
+                    totalAverageMeleeDamage.length
+                ).toFixed(TWO),
+            },
         }
     }
 }

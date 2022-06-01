@@ -4,11 +4,49 @@ import {
     IsNotEmpty,
     IsNumber,
     IsOptional,
-    IsString, Max, Min,
+    IsString,
+    Max,
+    Min,
 } from 'class-validator'
-import {MAX_DICE_NUMBER, TWO} from "../../../shared/constants/dices.constant";
 
-class Weapon {
+import { MAX_DICE_NUMBER, TWO } from '../../../shared/constants/dices.constant'
+
+export class MeleeWeapon {
+    @IsString()
+    @IsOptional()
+    s?: string
+
+    @IsNumber()
+    ap: number
+
+    @IsString()
+    d: string
+
+    @IsNumber()
+    numberOfAttacks: number
+
+    @IsNumber()
+    @IsOptional()
+    numberOfAutomaticallyWounds?: number
+
+    @IsNumber()
+    @IsOptional()
+    numberOfAutomaticallyWoundsOnHit?: number
+
+    @IsNumber()
+    @IsOptional()
+    inflictsMortalWoundsOn?: number
+
+    @IsNumber()
+    @IsOptional()
+    mortalWoundsForOne?: number
+
+    @IsBoolean()
+    @IsOptional()
+    inAdditional?: boolean
+}
+
+export class RangeWeapon {
     @IsNumber()
     s: number
 
@@ -56,11 +94,11 @@ export class Attacker {
     @IsNumber()
     s: number
 
-    @IsNumber()
-    numberMeleeOfAttacks: number
+    @IsArray()
+    rangeWeapons: RangeWeapon[]
 
     @IsArray()
-    weapons: Weapon[]
+    meleeWeapons: MeleeWeapon[]
 
     @IsBoolean()
     @IsOptional()
@@ -73,7 +111,6 @@ export class Attacker {
     @IsNumber()
     @IsOptional()
     plusToWound?: number
-
 }
 
 export class Defender {
@@ -100,6 +137,10 @@ export class Defender {
     @IsNumber()
     @IsOptional()
     plusSv?: number
+
+    @IsNumber()
+    @IsOptional()
+    minusS?: number
 }
 
 export class CheckChancesDto {

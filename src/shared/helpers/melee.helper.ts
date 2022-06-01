@@ -13,7 +13,7 @@ import { svChecker } from './sv-checker.helper'
 import { toWoundChecker } from './to-wound-checker.helper'
 import { toWoundNumberChecker } from './to-wound-number-checker.helper'
 
-export const range = async (
+export const melee = async (
     attacker: Attacker,
     defender: Defender,
 ): Promise<DamageStatType> => {
@@ -25,16 +25,33 @@ export const range = async (
         averageDamage: 0,
     }
 
-    for await (const weapon of attacker.rangeWeapons) {
-        const numberToWound = await toWoundNumberChecker(
-            weapon.s,
-            defender.t,
-            attacker.plusToWound,
-        )
+    for await (const weapon of attacker.meleeWeapons) {
         let weaponResult = {
             weaponSuccessHits: 0,
             weaponSuccessWounds: 0,
         }
+        let weaponS = attacker.s
+
+        if (weapon?.s) {
+            switch (weapon.s) {
+                case 'X2':
+                    weaponS *= TWO
+                    break
+                default:
+                    weaponS += Number(weapon.s)
+                    break
+            }
+        }
+        if (defender?.minusS) {
+            weaponS -= defender.minusS
+        }
+
+        const numberToWound = await toWoundNumberChecker(
+            weaponS,
+            defender.t,
+            attacker.plusToWound,
+        )
+
         let defenderClearSv = defender?.plusSv
             ? defender.sv - defender.plusSv
             : defender.sv
@@ -63,7 +80,7 @@ export const range = async (
             ) {
                 weaponResult.weaponSuccessWounds += 1
                 result.successHits += 1
-            } else if (diceNumber >= attacker.bs) {
+            } else if (diceNumber >= attacker.ws) {
                 weaponResult.weaponSuccessHits += 1
                 result.successHits += 1
             } else if (diceNumber === 1 && attacker?.rerolsToHitOfOne) {
@@ -75,14 +92,14 @@ export const range = async (
                 ) {
                     weaponResult.weaponSuccessWounds += 1
                     result.successHits += 1
-                } else if (diceNumber >= attacker.bs) {
+                } else if (diceNumber >= attacker.ws) {
                     weaponResult.weaponSuccessHits += 1
                     result.successHits += 1
                 }
             }
         }
 
-        const { result: newRes, weaponResult: newWeaponRes } =
+        const { result: toWoundRes, weaponResult: toWoundWeaponRes } =
             await toWoundChecker(
                 result,
                 weapon,
@@ -90,8 +107,8 @@ export const range = async (
                 attacker,
                 numberToWound,
             )
-        result = newRes
-        weaponResult = newWeaponRes
+        result = toWoundRes
+        weaponResult = toWoundWeaponRes
 
         result = await svChecker(result, weapon, weaponResult, defenderSv)
     }
