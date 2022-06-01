@@ -7,10 +7,7 @@ import {
 } from '../../checker/interfaces/dtos/check-chances.dto'
 import { MAX_DICE_NUMBER } from '../constants/dices.constant'
 import { DamageStatType } from '../types/damage-stat.type'
-import {
-    ToWoundCheckerType,
-    WeaponResult,
-} from '../types/to-wound-checker.type'
+import { ToWHCheckerType, WeaponResult } from '../types/to-w-h-checker.type'
 
 export const toWoundChecker = async (
     res: DamageStatType,
@@ -18,7 +15,7 @@ export const toWoundChecker = async (
     weaponRes: WeaponResult,
     attacker: Attacker,
     numberToWound: number,
-): Promise<ToWoundCheckerType> => {
+): Promise<ToWHCheckerType> => {
     const result = res
     const weaponResult = weaponRes
 

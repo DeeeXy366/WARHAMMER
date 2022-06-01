@@ -6,7 +6,7 @@ import {
 } from '../../checker/interfaces/dtos/check-chances.dto'
 import { MAX_DICE_NUMBER, TWO } from '../constants/dices.constant'
 import { DamageStatType } from '../types/damage-stat.type'
-import { WeaponResult } from '../types/to-wound-checker.type'
+import { WeaponResult } from '../types/to-w-h-checker.type'
 
 export const svChecker = async (
     res: DamageStatType,

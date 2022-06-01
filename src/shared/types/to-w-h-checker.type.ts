@@ -6,7 +6,7 @@ export class WeaponResult {
     weaponSuccessWounds: number
 }
 
-export class ToWoundCheckerType {
+export class ToWHCheckerType {
     result: DamageStatType
 
     weaponResult: WeaponResult

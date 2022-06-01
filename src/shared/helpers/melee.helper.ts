@@ -1,15 +1,14 @@
-import { random } from 'lodash'
-
 import {
     Attacker,
     Defender,
 } from '../../checker/interfaces/dtos/check-chances.dto'
-import { MAX_DICE_NUMBER, TWO } from '../constants/dices.constant'
+import { TWO } from '../constants/dices.constant'
 import { DamageStatType } from '../types/damage-stat.type'
 
 import { fnpChecker } from './fnp-checker.helper'
 import { paramChecker } from './param-checker.helper'
 import { svChecker } from './sv-checker.helper'
+import { toHitChecker } from './to-hit-checker.helper'
 import { toWoundChecker } from './to-wound-checker.helper'
 import { toWoundNumberChecker } from './to-wound-number-checker.helper'
 
@@ -69,35 +68,10 @@ export const melee = async (
             defenderSv = defender.inv
         }
 
-        for (let h = 0; h < weapon.numberOfAttacks; h += 1) {
-            let diceNumber = random(1, MAX_DICE_NUMBER)
-
-            result.hits += 1
-
-            if (
-                weapon?.numberOfAutomaticallyWoundsOnHit &&
-                diceNumber >= weapon?.numberOfAutomaticallyWoundsOnHit
-            ) {
-                weaponResult.weaponSuccessWounds += 1
-                result.successHits += 1
-            } else if (diceNumber >= attacker.ws) {
-                weaponResult.weaponSuccessHits += 1
-                result.successHits += 1
-            } else if (diceNumber === 1 && attacker?.rerolsToHitOfOne) {
-                diceNumber = random(1, MAX_DICE_NUMBER)
-
-                if (
-                    weapon?.numberOfAutomaticallyWoundsOnHit &&
-                    diceNumber >= weapon?.numberOfAutomaticallyWoundsOnHit
-                ) {
-                    weaponResult.weaponSuccessWounds += 1
-                    result.successHits += 1
-                } else if (diceNumber >= attacker.ws) {
-                    weaponResult.weaponSuccessHits += 1
-                    result.successHits += 1
-                }
-            }
-        }
+        const { result: toHitRes, weaponResult: toHitWeaponRes } =
+            await toHitChecker(result, weapon, weaponResult, attacker, 'ws')
+        result = toHitRes
+        weaponResult = toHitWeaponRes
 
         const { result: toWoundRes, weaponResult: toWoundWeaponRes } =
             await toWoundChecker(
